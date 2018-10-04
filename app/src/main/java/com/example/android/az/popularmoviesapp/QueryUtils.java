@@ -46,16 +46,16 @@ public final class QueryUtils {
         // Create an empty ArrayList that we can start adding movies to
         List<Movie> moviesList = new ArrayList<>();
 
-        // Try to parse the JSON response string. If there's a problem with the way the JSON
+        // Try to parse the JSON movie string. If there's a problem with the way the JSON
         // is formatted, a JSONException exception object will be thrown.
         // Catch the exception so the app doesn't crash, and print the error message to the logs.
         try {
 
-            // Create a JSONObject from the JSON response string
-            JSONObject baseJsonResponse = new JSONObject(moviesJSON);
+            // Create a JSONObject from the JSON movie string
+            JSONObject baseJsonMovie = new JSONObject(moviesJSON);
             // Extract the JSONArray associated with the key called "results",
             // which represents a list of movies.
-            JSONArray resultArray = baseJsonResponse.getJSONArray("results");
+            JSONArray resultArray = baseJsonMovie.getJSONArray("results");
 
 
             // For each movie in the resultArray, create an {@link Movie} object
@@ -63,13 +63,6 @@ public final class QueryUtils {
 
                 // Get a single movie at position i within the list of movies
                 JSONObject currentMovie = resultArray.getJSONObject(i);
-                /*
-                private String mOriginalTitle;
-                private String mReleaseDate;
-                private String mPosterImageThumbnail;
-                private String mAPlotSynopsis;
-                private String mUserRating;
-                */
                 // Extract the value for the key called "originalTitle"
                 String originalTitle = currentMovie.getString("original_title");
                 // Extract the value for the key called "releaseDate"
@@ -81,7 +74,7 @@ public final class QueryUtils {
                 // Extract the value for the key called "userRating"
                 String userRating = currentMovie.getString("vote_average");
                 // Create a new {@link Movie} object with the mOriginalTitle, mReleaseDate, mPosterImageThumbnail,mAPlotSynopsis
-                // and mUserRating from the JSON response.
+                // and mUserRating from the JSON movie.
                 Movie movies = new Movie(originalTitle,releaseDate,posterImageThumbnail,aPlotSynopsis,userRating);
                 // Add the new {@link Movie} to the list of movies.
                 moviesList.add(movies);

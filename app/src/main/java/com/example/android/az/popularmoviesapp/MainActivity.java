@@ -4,12 +4,10 @@ import android.app.LoaderManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.Loader;
-import android.content.SharedPreferences;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
 import android.support.v7.app.AppCompatActivity;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -35,13 +33,22 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
      */
     private static final String REQUEST_URL =
             "https://api.themoviedb.org/3/movie/";
+    /**
+     * REQUEST_SECTION URL for movies data from the movies dataset
+     */
     String REQUEST_SECTION;
-    boolean isRunning = false;
+    /**
+     * to check if loader is run
+     */
+    private boolean isRunning = false;
 
     /**
      * Adapter for the list of movies
      */
     private MoviesAdapter mAdapter;
+    /**
+     * if no internet or no data
+     */
     private TextView emptyView;
 
 
@@ -51,32 +58,31 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
         setContentView(R.layout.activity_main);
 
 
-        // Find a reference to the {@link ListView} in the layout
-        GridView moviesListView = (GridView) findViewById(R.id.gv_movies_grid);
-        emptyView = (TextView) findViewById(R.id.tv_empty_view);
-        moviesListView.setEmptyView(emptyView);
+        // Find a reference to the {@link GridView} in the layout
+        GridView moviesGridView = findViewById(R.id.gv_movies_grid);
+        // Find a reference to the {@link TextView} in the layout
+        emptyView = findViewById(R.id.tv_empty_view);
+        //set the EmptyView for the GridView
+        moviesGridView.setEmptyView(emptyView);
 
         // Create a new adapter that takes an empty list of movies as input
         mAdapter = new MoviesAdapter(this, new ArrayList<Movie>());
 
-        // Set the adapter on the {@link ListView}
+        // Set the adapter on the {@link GridView}
         // so the list can be populated in the user interface
-        moviesListView.setAdapter(mAdapter);
+        moviesGridView.setAdapter(mAdapter);
 
-        // Set an item click listener on the ListView, which sends an intent to a web browser
-        // to open a website with more information about the selected movie.
-        moviesListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+        // Set an item click listener on the GridView, which sends an intent to a  DetailMovieActivity
+        // to display a movie info with more information about the selected movie.
+        moviesGridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int position, long l) {
                 // Find the current movie that was clicked on
                 Movie currentMovie = mAdapter.getItem(position);
                 // Create a new intent to view the movie
                 Intent intent = new Intent(MainActivity.this, DetailMovieActivity.class);
-                intent.putExtra("original_title", currentMovie.getmOriginalTitle());
-                intent.putExtra("poster_image_thumbnail", currentMovie.getmPosterImageThumbnail());
-                intent.putExtra("a_plot_synopsis", currentMovie.getmAPlotSynopsis());
-                intent.putExtra("user_rating", currentMovie.getmUserRating());
-                intent.putExtra("release_date", currentMovie.getmReleaseDate());
+                //add the data with putExtra to send it to DetailMovieActivity
+                intent.putExtra("movieParcelable", currentMovie);
                 // Send the intent to launch a new activity
                 startActivity(intent);
             }
@@ -85,10 +91,15 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
 
         // Get a reference to the LoaderManager, in order to interact with loaders.
         loaderManager = getLoaderManager();
+        //initiate the loader by method
         executeLoader(getString(R.string.settings_def_section_default));
     }
 
-
+    /**
+     * executeLoader method to initiate loader with diff url request section
+     *
+     * @param requestSection
+     */
     void executeLoader(String requestSection) {
         // Get a reference to the ConnectivityManager to check state of network connectivity
         ConnectivityManager connMgr = (ConnectivityManager)
@@ -102,9 +113,14 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
             // Initialize the loader. Pass in the int ID constant defined above and pass in null for
             // the bundle. Pass in this activity for the LoaderCallbacks parameter (which is valid
             // because this activity implements the LoaderCallbacks interface).
+            //assign value for REQUEST_SECTION befor initiate loader
             REQUEST_SECTION = requestSection;
 
             if (!isRunning) {
+                /**
+                 * if isRunning false mean first run then initLoader
+                 * else mean we already has loader then restartLoader
+                 */
                 loaderManager.initLoader(MOVIES_LOADER_ID, null, this);
                 isRunning = true;
             } else {
@@ -125,24 +141,20 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
 
     @Override
     public Loader<List<Movie>> onCreateLoader(int i, Bundle bundle) {
-
-        SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(this);
-//        String defSection = sharedPrefs.getString(getString(R.string.settings_def_section_key),getString(R.string.settings_def_section_default);
+        /**
+         * create request url from REQUEST_URL + REQUEST_SECTION
+         * then parse it as Uri
+         * the using uri builder fro append format and api_key
+         */
         String REQUEST_URL_SECTION = REQUEST_URL + REQUEST_SECTION;
-//        String orderBy = sharedPrefs.getString(
-//                getString(R.string.settings_order_by_key),
-//                getString(R.string.settings_order_by_default)
-//        );
         Uri baseUri = Uri.parse(REQUEST_URL_SECTION);
         Uri.Builder uriBuilder = baseUri.buildUpon();
 
         uriBuilder.appendQueryParameter("format", "json");
-//        uriBuilder.appendQueryParameter("section", defSection);
-        uriBuilder.appendQueryParameter("api_key", "8403ffd9c4f9d713a2f221c9fb6a3e92");
-//        uriBuilder.appendQueryParameter("orderby", orderBy);
-
+        //TODO has to add you api_key before run app
+        uriBuilder.appendQueryParameter("api_key", BuildConfig.API_KEY);
+        //return the MoviesLoader with url
         return new MoviesLoader(this, uriBuilder.toString());
-//        return new MoviesLoader(this,REQUEST_URL);
     }
 
     @Override
@@ -165,18 +177,20 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
 
     @Override
     public void onLoaderReset(Loader<List<Movie>> loader) {
+        // Clear the adapter of previous movies data
         mAdapter.clear();
     }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
+        //create menu with my own menu
         getMenuInflater().inflate(R.menu.main, menu);
         return true;
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-
+        //handle menu option to execute loader with different url
         switch (item.getItemId()) {
             case R.id.action_most_popular:
                 executeLoader(getString(R.string.most_popular_menu_item_val));
@@ -189,4 +203,5 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
         }
 
     }
+
 }
