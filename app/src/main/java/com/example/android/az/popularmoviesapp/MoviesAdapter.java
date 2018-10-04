@@ -13,6 +13,9 @@ import com.squareup.picasso.Picasso;
 
 import java.util.List;
 
+import butterknife.BindView;
+import butterknife.ButterKnife;
+
 public class MoviesAdapter extends ArrayAdapter<Movie> {
 
     public MoviesAdapter(@NonNull Context context, @NonNull List<Movie> objects) {
@@ -32,10 +35,8 @@ public class MoviesAdapter extends ArrayAdapter<Movie> {
         if (listItemView == null) {
             listItemView = LayoutInflater.from(getContext()).inflate(
                     R.layout.movies_list_item, parent, false);
-            //Use Holder
-            holder = new ViewHolder();
-            //Find ImageView
-            holder.posterImage = listItemView.findViewById(R.id.iv_movie_image);
+            //Use Holder with ButterKnife
+            holder = new ViewHolder(listItemView);
             listItemView.setTag(holder);
 
         } else {
@@ -60,7 +61,12 @@ public class MoviesAdapter extends ArrayAdapter<Movie> {
 
     static class ViewHolder {
 
+        @BindView(R.id.iv_movie_image)
         ImageView posterImage;
+
+        public ViewHolder(View view) {
+            ButterKnife.bind(this, view);
+        }
 
 
     }
