@@ -4,12 +4,12 @@ import android.os.Parcel;
 import android.os.Parcelable;
 
 public class Movie implements Parcelable {
+    private int mId;
     private String mOriginalTitle;
     private String mReleaseDate;
     private String mPosterImageThumbnail;
     private String mAPlotSynopsis;
     private String mUserRating;
-    private int mId;
 
     public Movie(int mId,String mOriginalTitle, String mReleaseDate, String mPosterImageThumbnail, String mAPlotSynopsis, String mUserRating) {
        this.mId = mId;
